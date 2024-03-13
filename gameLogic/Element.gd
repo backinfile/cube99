@@ -1,3 +1,4 @@
+extends RefCounted
 class_name Element
 
 # 创建后除了node之外的值不变
@@ -10,6 +11,7 @@ const Type_Wall = "Wa"
 const Type_Target = "Ta"
 const Type_Box = "Bo"
 
-
+func _init(type:String = "  "):
+	self.type = type
 
 

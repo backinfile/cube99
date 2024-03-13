@@ -3,17 +3,30 @@ class_name Game
 
 static var instance
 static var gameMap: GameMap
+static var curRoundGameMap: GameMap
 
 func _ready():
 	instance = self
-	loadLevel("res://mapResource/level1.json")
-
-
-func loadLevel(path:String):
-	$World.get_children().clear()
-	GameLogic.init()
+	print([[1], [2,2], [3,3,3]].map(func(s):return s.size()))
+	print([[1], [2,2], [3,3,3]].map(func(s):return s.size()).max())
 	
-	gameMap = GameMap.parseFile(path)
+	#loadLevelFile("res://mapResource/level1.json")
+	curRoundGameMap = GenLogic.genMap(1)[0]
+	loadGameMap(curRoundGameMap.makeCopy())
+	calcGame()
+
+
+func loadLevelFile(path:String):
+	curRoundGameMap = GameMap.parseFile(path)
+	loadGameMap(curRoundGameMap.makeCopy())
+	
+
+func loadGameMap(gameMap:GameMap):
+	self.gameMap = gameMap
+	for node in $World.get_children():
+		$World.remove_child(node)
+		node.queue_free()
+	GameLogic.init()
 	
 	var startPosition = calcStartPosition(0,0)
 	ElementNode.ui_offset_x = startPosition.x
@@ -43,6 +56,13 @@ func loadLevel(path:String):
 			var p = ElementNode.getUIPositionByPos(gameMap.getElementPos(e))
 			e.node = ElementNode.createElementNode(e.type, p.x, p.y)
 			$World.add_child(e.node)
+			
+func calcGame():
+	var result = SolveLogic.solve(gameMap)
+	await get_tree().create_timer(1).timeout
+	for move in result.moves:
+		GameLogic.move(move.x, move.y)
+		await get_tree().create_timer(0.2).timeout
 
 func calcStartPosition(x: int, y:int) -> Vector2:
 	var size = get_viewport_rect().size
@@ -57,10 +77,16 @@ func _process(delta):
 	var dx = 0
 	var dy = 0
 	if Input.is_action_just_pressed("restart"):
-		loadLevel("res://mapResource/level1.json")
+		loadGameMap(curRoundGameMap.makeCopy())
+		calcGame()
 		return
 	if Input.is_action_just_pressed("back"):
 		GameLogic.back()
+		return
+	if Input.is_action_just_pressed("next"):
+		curRoundGameMap = GenLogic.genMap(1)[0]
+		loadGameMap(curRoundGameMap.makeCopy())
+		calcGame()
 		return
 	if Input.is_action_just_pressed("ui_left"):
 		dx = -1

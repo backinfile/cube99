@@ -9,6 +9,9 @@ const FACTOR = 1000
 
 func getElement(x:int, y: int) -> Element:
 	return data.get(x * FACTOR + y)
+
+func getElementFloor(x:int, y: int) -> Element:
+	return floor.get(x * FACTOR + y)
 	
 func inMapArea(x: int, y: int) -> bool:
 	return 0 <= x and x < width and 0 <= y and y < height
@@ -80,13 +83,13 @@ func makeCopy() -> GameMap:
 	for i in data:
 		map.data[i] = data[i]
 	for i in floor:
-		floor.data[i] = data[i]
+		map.floor[i] = floor[i]
 	return map
 
 func isGameOver() -> bool:
 	for i in floor:
 		if floor[i].type == Element.Type_Target:
-			if data[i] == null or data[i].type != Element.Type_Box:
+			if data.get(i) == null or data[i].type != Element.Type_Box:
 				return false
 	return true
 	
@@ -103,3 +106,81 @@ func applyStep(steps: Array[Step], reverse: bool = false):
 			removeElement(e)
 			setElement(e, step.to.x, step.to.y)
 	pass
+
+func getStateHash():
+	const R = 131
+	var hash = 0
+	hash = hash * R + width
+	hash = hash * R + height
+	for x in range(width):
+		for y in range(height):
+			var i = x * FACTOR + y
+			var e = data.get(i)
+			if e != null:
+				hash = hash * R + i
+				hash = hash * R + hash(e)
+			var f = floor.get(i)
+			if f != null:
+				hash = hash * R + i
+				hash = hash * R + hash(e)
+	return hash
+	
+const DIR = [0, 1, 0, -1, 1, 0, -1, 0]
+	
+func calcDeathPosList() -> Array:
+	return []
+	var result = []
+	for tx in range(width):
+		for ty in range(height):
+			if is_stop(tx, ty): continue
+			if checkIsDeathCornor(tx,ty) or checkIsDeathPos(tx, ty): 
+				result.append(Vector2(tx, ty))
+	return result
+	
+func checkIsDeathCornor(tx: int, ty: int) -> bool:
+	var e = getElementFloor(tx, ty)
+	if e != null:
+		return false
+	var upBlock = is_stop(tx, ty - 1)
+	var leftBlock = is_stop(tx - 1, ty)
+	var downBlock = is_stop(tx, ty + 1)
+	var rightBlock = is_stop(tx + 1, ty)
+	return (upBlock and leftBlock) or (leftBlock and downBlock) or (downBlock and rightBlock) or (rightBlock and upBlock)
+	
+func checkIsDeathPos(tx: int, ty:int) -> bool:
+	for x in range(width):
+		var e = getElementFloor(x, ty)
+		if e != null && e.type == Element.Type_Target:
+			return false
+	for y in range(height):
+		var e = getElementFloor(tx, y)
+		if e != null && e.type == Element.Type_Target:
+			return false
+
+	var upBlock = true
+	var downBlock = true
+	var leftBlock = true
+	var rightBlock = true
+	for x in range(0, width):
+		for y in range(0, ty):
+			var e = getElement(x, y)
+			if e == null or e.type != Element.Type_Wall:
+				upBlock = false
+				break
+		for y in range(ty+1, height):
+			var e = getElement(x, y)
+			if e == null or e.type != Element.Type_Wall:
+				downBlock = false
+				break
+	for y in range(0, height):
+		for x in range(0, tx):
+			var e = getElement(x, y)
+			if e == null or e.type != Element.Type_Wall:
+				leftBlock = false
+				break
+		for x in range(tx+1, width):
+			var e = getElement(x, y)
+			if e == null or e.type != Element.Type_Wall:
+				rightBlock = false
+				break
+	return upBlock or downBlock or leftBlock or rightBlock
