@@ -1,7 +1,6 @@
 class_name Element
 
-var x = 0
-var y = 0
+# 创建后除了node之外的值不变
 var type = "  "
 var node: Node2D
 

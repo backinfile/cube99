@@ -29,6 +29,8 @@ static func getUIPosition(x: int, y: int) -> Vector2:
 	var fy = ui_offset_y + y * (ElementNode.Element_Size + ElementNode.Element_Gap)
 	return Vector2(fx, fy)
 
+static func getUIPositionByPos(pos: Vector2) -> Vector2:
+	return getUIPosition(pos.x, pos.y)
 
 static var texture_cache = {}
 

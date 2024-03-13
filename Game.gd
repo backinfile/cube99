@@ -29,18 +29,18 @@ func loadLevel(path:String):
 	for i in gameMap.data:
 		var e = gameMap.data[i]
 		if e.type == Element.Type_Box:
-			var p = ElementNode.getUIPosition(e.x, e.y)
+			var p = ElementNode.getUIPositionByPos(gameMap.getElementPos(e))
 			e.node = ElementNode.createElementNode(e.type, p.x, p.y)
 			$World.add_child(e.node)
 	for i in gameMap.floor:
 		var e = gameMap.floor[i]
-		var p = ElementNode.getUIPosition(e.x, e.y)
+		var p = ElementNode.getUIPositionByPos(gameMap.getElementPos(e))
 		e.node = ElementNode.createElementNode(e.type, p.x, p.y)
 		$World.add_child(e.node)
 	for i in gameMap.data:
 		var e = gameMap.data[i]
 		if e.type != Element.Type_Box:
-			var p = ElementNode.getUIPosition(e.x, e.y)
+			var p = ElementNode.getUIPositionByPos(gameMap.getElementPos(e))
 			e.node = ElementNode.createElementNode(e.type, p.x, p.y)
 			$World.add_child(e.node)
 

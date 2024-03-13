@@ -20,14 +20,19 @@ func is_stop(x: int, y: int):
 	return e.type == Element.Type_Wall
 	
 func setElement(e: Element, x: int, y: int):
-	e.x = x
-	e.y = y
-	data[e.x * FACTOR + e.y] = e
+	data[x * FACTOR + y] = e
 	
 func setFloor(e: Element, x: int, y: int):
-	e.x = x
-	e.y = y
-	floor[e.x * FACTOR + e.y] = e
+	floor[x * FACTOR + y] = e
+
+func getElementPos(e: Element) -> Vector2:
+	for i in data:
+		if data[i] == e:
+			return Vector2(i / FACTOR, i % FACTOR)
+	for i in floor:
+		if floor[i] == e:
+			return Vector2(i / FACTOR, i % FACTOR)
+	return Vector2(-1, -1)
 
 func removeElement(e: Element):
 	for i in data:
@@ -68,4 +73,33 @@ static func parseFile(path:String) -> GameMap:
 			gameMap.setFloor(e, i % width, i / width)
 	return gameMap
 	
+func makeCopy() -> GameMap:
+	var map = GameMap.new()
+	map.width = width
+	map.height = height
+	for i in data:
+		map.data[i] = data[i]
+	for i in floor:
+		floor.data[i] = data[i]
+	return map
 
+func isGameOver() -> bool:
+	for i in floor:
+		if floor[i].type == Element.Type_Target:
+			if data[i] == null or data[i].type != Element.Type_Box:
+				return false
+	return true
+	
+func applyStep(steps: Array[Step], reverse: bool = false):
+	if reverse:
+		for i in range(steps.size() - 1, -1, -1):
+			var step = steps[i]
+			var e = step.e
+			removeElement(e)
+			setElement(e, step.from.x, step.from.y)
+	else:
+		for step in steps:
+			var e = step.e
+			removeElement(e)
+			setElement(e, step.to.x, step.to.y)
+	pass
